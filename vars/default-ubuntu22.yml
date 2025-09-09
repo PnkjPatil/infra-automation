@@ -1,0 +1,260 @@
+---
+# Ubuntu 22.04 Configuration Variables
+
+# Apache Configuration
+apache_listen_port: 81
+apache_listen_ip: "*"
+
+# Disable ssl so that NGINX can use it
+apache_mods_enabled:
+  - rewrite.load
+  - remoteip.load
+  - headers.load
+  - expires.load
+
+apache_mods_disabled:
+  - ssl.load
+
+# FPM Configuration
+fpm_port: 9000
+fpm_pm: "ondemand"
+fpm_pm_max_children: 20
+
+# Vars for the NGINX - Apache setup
+sites_container: "/var/www"
+nginx_vhosts_location: "/etc/nginx/sites-enabled"
+
+# Site setup vars
+site_ssl: 1
+ssl_selfsigned: 1
+
+# PHP Variables for all versions
+php_packages:
+  - php{{php_install_version}}-common
+  - php{{php_install_version}}-cli
+  - php{{php_install_version}}-dev
+  - php{{php_install_version}}-fpm
+  - php{{php_install_version}}-gd
+  - php{{php_install_version}}-curl
+  - php{{php_install_version}}-imap
+  - php{{php_install_version}}-opcache
+  - php{{php_install_version}}-xml
+  - php{{php_install_version}}-mbstring
+  - php{{php_install_version}}-mysql
+  - php{{php_install_version}}-zip
+  - php{{php_install_version}}-json
+  - php{{php_install_version}}-bcmath
+  - php{{php_install_version}}-intl
+  - php{{php_install_version}}-soap
+  - php{{php_install_version}}-xmlrpc
+  - php{{php_install_version}}-ldap
+  - php{{php_install_version}}-redis
+  - php{{php_install_version}}-memcached
+  - php{{php_install_version}}-sqlite3
+  - php{{php_install_version}}-pgsql
+  - php{{php_install_version}}-mongodb
+  - libpcre3-dev
+
+# MySQL Packages
+mysql_packages:
+  - mysql-server-8.0
+  - mysql-client-8.0
+  - mysql-common
+
+# Adminer Configuration
+adminer_download_url: "https://github.com/vrana/adminer/releases/download/v4.8.1/adminer-4.8.1-mysql.php"
+adminer_css_download_url: "https://raw.githubusercontent.com/vrana/adminer/master/designs/lucas-sandery/adminer.css"
+
+# Composer Configuration
+composer_global_packages:
+  - { name: codeception/codeception }
+  - { name: phpunit/phpunit }
+  - { name: friendsofphp/php-cs-fixer }
+  - { name: phpstan/phpstan }
+
+# Java Configuration
+java_packages:
+  - openjdk-17-jdk
+  - openjdk-21-jdk
+  - maven
+  - gradle
+
+# Python Configuration
+python_packages:
+  - python3
+  - python3-pip
+  - python3-venv
+  - python3.10
+  - python3.11
+  - python3.12
+  - python3.13
+
+# Node.js Configuration
+nodejs_version: "18.x"
+npm_packages:
+  - yarn
+  - pm2
+  - nodemon
+  - typescript
+  - @angular/cli
+  - vue-cli
+
+# Docker Configuration
+docker_compose_version: "2.20.0"
+
+# Security Configuration
+fail2ban_enabled: true
+ufw_enabled: true
+ufw_default_policy: "deny"
+ufw_allowed_ports:
+  - "22"
+  - "80"
+  - "443"
+
+# Logging Configuration
+log_retention_days: 30
+log_rotation: "daily"
+
+# Performance Configuration
+nginx_worker_processes: "auto"
+nginx_worker_connections: 1024
+apache_max_connections: 150
+php_memory_limit: "256M"
+php_max_execution_time: 300
+php_upload_max_filesize: "64M"
+php_post_max_size: "64M"
+
+# Monitoring Configuration
+monitoring_enabled: true
+monitoring_tools:
+  - htop
+  - iotop
+  - nethogs
+  - nload
+  - iftop
+
+# Backup Configuration
+backup_enabled: true
+backup_retention_days: 7
+backup_schedule: "0 2 * * *"  # Daily at 2 AM
+
+# Development Tools
+dev_tools:
+  - git
+  - vim
+  - nano
+  - htop
+  - tree
+  - mc
+  - filezilla
+  - meld
+  - geany
+  - sublime-text
+  - vlc
+  - ubuntu-restricted-extras
+
+# Additional Services
+additional_services:
+  - redis-server
+  - memcached
+  - elasticsearch
+  - kibana
+  - logstash
+  - prometheus
+  - grafana
+
+# SSL Configuration
+ssl_certificate_path: "/etc/ssl/certs"
+ssl_private_key_path: "/etc/ssl/private"
+ssl_certificate_authority: "/etc/ssl/certs/ca-certificates.crt"
+
+# Database Configuration
+database_root_password: "{{ vault_database_root_password }}"
+database_user: "{{ vault_database_user }}"
+database_password: "{{ vault_database_password }}"
+database_name: "{{ vault_database_name }}"
+
+# Email Configuration
+smtp_host: "{{ vault_smtp_host }}"
+smtp_port: "{{ vault_smtp_port }}"
+smtp_username: "{{ vault_smtp_username }}"
+smtp_password: "{{ vault_smtp_password }}"
+
+# Backup Storage
+backup_storage_path: "/var/backups"
+backup_storage_type: "local"  # local, s3, ftp, sftp
+backup_compression: true
+backup_encryption: false
+
+# Monitoring and Alerting
+monitoring_alert_email: "{{ vault_monitoring_alert_email }}"
+monitoring_disk_threshold: 80
+monitoring_memory_threshold: 80
+monitoring_cpu_threshold: 80
+
+# PHP-FPM Pool Configuration
+fpm_pool_config:
+  pm: "ondemand"
+  pm_max_children: 20
+  pm_start_servers: 5
+  pm_min_spare_servers: 5
+  pm_max_spare_servers: 35
+  pm_max_requests: 1000
+  request_terminate_timeout: 300
+  rlimit_files: 131072
+  rlimit_core: unlimited
+
+# NGINX Configuration
+nginx_worker_processes: "auto"
+nginx_worker_connections: 1024
+nginx_keepalive_timeout: 65
+nginx_client_max_body_size: "64M"
+nginx_gzip_enabled: true
+nginx_gzip_types:
+  - text/plain
+  - text/css
+  - text/xml
+  - text/javascript
+  - application/javascript
+  - application/xml+rss
+  - application/json
+
+# Apache Configuration
+apache_keepalive: "On"
+apache_keepalive_timeout: 5
+apache_max_keepalive_requests: 100
+apache_timeout: 300
+apache_max_clients: 150
+apache_server_limit: 256
+
+# MySQL Configuration
+mysql_bind_address: "127.0.0.1"
+mysql_port: 3306
+mysql_max_connections: 200
+mysql_query_cache_size: "64M"
+mysql_innodb_buffer_pool_size: "256M"
+mysql_innodb_log_file_size: "64M"
+mysql_innodb_flush_log_at_trx_commit: 2
+mysql_sync_binlog: 0
+
+# Redis Configuration
+redis_bind: "127.0.0.1"
+redis_port: 6379
+redis_maxmemory: "256mb"
+redis_maxmemory_policy: "allkeys-lru"
+
+# Memcached Configuration
+memcached_bind: "127.0.0.1"
+memcached_port: 11211
+memcached_memory: 256
+memcached_max_connections: 1024
+
+# System Configuration
+system_timezone: "UTC"
+system_locale: "en_US.UTF-8"
+system_keyboard_layout: "us"
+system_swap_size: "2G"
+system_swap_swappiness: 10
+system_vm_swappiness: 10
+system_dirty_ratio: 15
+system_dirty_background_ratio: 5

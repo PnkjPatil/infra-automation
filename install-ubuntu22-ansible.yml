@@ -1,0 +1,482 @@
+---
+- name: Ubuntu 22.04 PHP Adminer Multi-Version Installation
+  hosts: localhost
+  become: true
+  gather_facts: true
+  
+  vars:
+    # User configuration
+    newuser_username: "{{ ansible_user }}"
+    newuser_name: "{{ ansible_user }}"
+    
+    # PHP versions to install
+    php_versions:
+      - "5.6"
+      - "7.0"
+      - "7.1"
+      - "7.2"
+      - "7.3"
+      - "7.4"
+      - "8.0"
+      - "8.1"
+      - "8.2"
+      - "8.3"
+      - "8.4"
+    
+    # Site configuration
+    sites:
+      - "php5"
+      - "php7"
+      - "php71"
+      - "php72"
+      - "php73"
+      - "php74"
+      - "php8"
+      - "php81"
+      - "php82"
+      - "php83"
+      - "php84"
+    
+    # Domain names
+    domain_names:
+      - "{{ newuser_username }}-php5.local"
+      - "{{ newuser_username }}-php7.local"
+      - "{{ newuser_username }}-php71.local"
+      - "{{ newuser_username }}-php72.local"
+      - "{{ newuser_username }}-php73.local"
+      - "{{ newuser_username }}-php74.local"
+      - "{{ newuser_username }}-php8.local"
+      - "{{ newuser_username }}-php81.local"
+      - "{{ newuser_username }}-php82.local"
+      - "{{ newuser_username }}-php83.local"
+      - "{{ newuser_username }}-php84.local"
+
+  pre_tasks:
+    - name: Check Ubuntu version
+      fail:
+        msg: "This playbook is designed for Ubuntu 22.04 (Jammy Jellyfish). You are running {{ ansible_distribution_version }}."
+      when: ansible_distribution_version != "22.04"
+
+    - name: Update apt cache
+      apt: update_cache=yes
+
+    - name: Install required packages for repositories
+      apt: name={{ item }} state=present
+      with_items:
+        - software-properties-common
+        - apt-transport-https
+        - ca-certificates
+        - curl
+        - wget
+        - unzip
+        - gnupg
+        - lsb-release
+        - build-essential
+        - git
+        - vim
+        - nano
+        - htop
+        - tree
+        - mc
+        - openssh-server
+        - ufw
+        - fail2ban
+        - logwatch
+        - nginx-extras
+        - apache2-utils
+
+  tasks:
+    - name: Add ondrej PHP repositories
+      apt_repository: repo='ppa:ondrej/php' state=present
+
+    - name: Add ondrej Apache repositories
+      apt_repository: repo='ppa:ondrej/apache2' state=present
+
+    - name: Add ondrej Ansible repositories
+      apt_repository: repo='ppa:ansible/ansible' state=present
+
+    - name: Add OpenJDK repository
+      apt_repository: repo='ppa:openjdk-r/ppa' state=present
+
+    - name: Add Python PPA
+      apt_repository: repo='ppa:deadsnakes/ppa' state=present
+
+    - name: Add NodeSource repository for Node.js 18.x
+      shell: curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+      args:
+        creates: /etc/apt/sources.list.d/nodesource.list
+
+    - name: Update apt cache after adding repositories
+      apt: update_cache=yes
+
+    - name: Install PHP versions
+      apt: name={{ item }} state=present
+      with_items:
+        - "php{{ item }}-common"
+        - "php{{ item }}-cli"
+        - "php{{ item }}-dev"
+        - "php{{ item }}-fpm"
+        - "php{{ item }}-gd"
+        - "php{{ item }}-curl"
+        - "php{{ item }}-imap"
+        - "php{{ item }}-opcache"
+        - "php{{ item }}-xml"
+        - "php{{ item }}-mbstring"
+        - "php{{ item }}-mysql"
+        - "php{{ item }}-zip"
+        - "php{{ item }}-json"
+        - "php{{ item }}-bcmath"
+        - "php{{ item }}-intl"
+        - "php{{ item }}-soap"
+        - "php{{ item }}-xmlrpc"
+        - "php{{ item }}-ldap"
+        - "php{{ item }}-redis"
+        - "php{{ item }}-memcached"
+        - "php{{ item }}-sqlite3"
+        - "php{{ item }}-pgsql"
+        - "php{{ item }}-mongodb"
+      loop: "{{ php_versions }}"
+
+    - name: Install web servers
+      apt: name={{ item }} state=present
+      with_items:
+        - apache2
+        - libapache2-mod-php
+        - nginx
+
+    - name: Install Apache modules
+      apache2_module: name={{ item }} state=present
+      with_items:
+        - rewrite
+        - remoteip
+        - headers
+        - expires
+
+    - name: Disable default Apache site
+      apache2_site: name=000-default state=absent
+
+    - name: Install MySQL
+      apt: name={{ item }} state=present
+      with_items:
+        - mysql-server-8.0
+        - mysql-client-8.0
+        - mysql-common
+
+    - name: Install Java
+      apt: name={{ item }} state=present
+      with_items:
+        - openjdk-17-jdk
+        - openjdk-21-jdk
+        - maven
+        - gradle
+
+    - name: Install Python versions
+      apt: name={{ item }} state=present
+      with_items:
+        - python3
+        - python3-pip
+        - python3-venv
+        - python3.10
+        - python3.11
+        - python3.12
+        - python3.13
+
+    - name: Install Node.js
+      apt: name=nodejs state=present
+
+    - name: Install Docker
+      apt: name={{ item }} state=present
+      with_items:
+        - docker.io
+        - docker-compose
+        - containerd
+
+    - name: Install additional development tools
+      apt: name={{ item }} state=present
+      with_items:
+        - geany
+        - geany-plugins
+        - geany-plugins-common
+        - geany-plugin-addons
+        - geany-plugin-prettyprinter
+        - filezilla
+        - meld
+        - vlc
+        - sublime-text
+        - ubuntu-restricted-extras
+        - libpcre3-dev
+
+    - name: Remove default FPM pools
+      file: path="/etc/php/{{ item }}/fpm/pool.d/www.conf" state=absent
+      loop: "{{ php_versions }}"
+
+    - name: Create site directories
+      file:
+        path: "/var/www/{{ item }}"
+        state: directory
+        owner: "{{ newuser_username }}"
+        group: "{{ newuser_username }}"
+        mode: '0755'
+      loop: "{{ domain_names }}"
+
+    - name: Create site subdirectories
+      file:
+        path: "/var/www/{{ item.0 }}/{{ item.1 }}"
+        state: directory
+        owner: "{{ newuser_username }}"
+        group: "{{ newuser_username }}"
+        mode: '0755'
+      loop: "{{ domain_names | product(['public', 'logs', 'tmp', 'run']) }}"
+
+    - name: Create index.php files
+      copy:
+        content: |
+          <?php
+          phpinfo();
+          ?>
+        dest: "/var/www/{{ item }}/public/index.php"
+        owner: "{{ newuser_username }}"
+        group: "{{ newuser_username }}"
+        mode: '0644'
+      loop: "{{ domain_names }}"
+
+    - name: Create Adminer directories
+      file:
+        path: "/var/www/{{ item }}/public/adminer"
+        state: directory
+        owner: "{{ newuser_username }}"
+        group: "{{ newuser_username }}"
+        mode: '0755'
+      loop: "{{ domain_names }}"
+
+    - name: Download Adminer
+      get_url:
+        url: "https://github.com/vrana/adminer/releases/download/v4.8.1/adminer-4.8.1-mysql.php"
+        dest: "/var/www/{{ item }}/public/adminer/index.php"
+        owner: "{{ newuser_username }}"
+        group: "{{ newuser_username }}"
+        mode: '0644'
+      loop: "{{ domain_names }}"
+
+    - name: Download Adminer CSS
+      get_url:
+        url: "https://raw.githubusercontent.com/vrana/adminer/master/designs/lucas-sandery/adminer.css"
+        dest: "/var/www/{{ item }}/public/adminer/adminer.css"
+        owner: "{{ newuser_username }}"
+        group: "{{ newuser_username }}"
+        mode: '0644'
+      loop: "{{ domain_names }}"
+
+    - name: Create PHP-FPM pool configurations
+      template:
+        src: "templates/php-fpm-pool.j2"
+        dest: "/etc/php/{{ item.1 }}/fpm/pool.d/{{ item.0 }}.conf"
+        owner: root
+        group: root
+        mode: '0644'
+      loop: "{{ sites | zip(php_versions) | list }}"
+
+    - name: Create Apache virtual hosts
+      template:
+        src: "templates/apache-vhost.j2"
+        dest: "/etc/apache2/sites-available/{{ item.0 }}.conf"
+        owner: root
+        group: root
+        mode: '0644'
+      loop: "{{ sites | zip(php_versions) | list }}"
+
+    - name: Enable Apache sites
+      apache2_site: name={{ item }} state=present
+      loop: "{{ sites }}"
+
+    - name: Create NGINX configuration
+      template:
+        src: "templates/nginx-sites.j2"
+        dest: "/etc/nginx/sites-available/php-sites"
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Remove default NGINX site
+      file: path="/etc/nginx/sites-enabled/default" state=absent
+
+    - name: Enable NGINX php-sites
+      file:
+        src: "/etc/nginx/sites-available/php-sites"
+        dest: "/etc/nginx/sites-enabled/php-sites"
+        state: link
+
+    - name: Add hosts file entries
+      lineinfile:
+        path: /etc/hosts
+        line: "127.0.0.1 {{ item }}"
+        state: present
+      loop: "{{ domain_names }}"
+
+    - name: Create log directories
+      file:
+        path: "/var/log/nginx/{{ item }}"
+        state: directory
+        owner: "{{ newuser_username }}"
+        group: "{{ newuser_username }}"
+        mode: '0755'
+      loop: "{{ sites }}"
+
+    - name: Configure firewall
+      ufw:
+        rule: allow
+        port: '22'
+        proto: tcp
+
+    - name: Configure firewall for web services
+      ufw:
+        rule: allow
+        port: '80,443'
+        proto: tcp
+
+    - name: Enable firewall
+      ufw:
+        state: enabled
+        policy: deny
+
+    - name: Set up fail2ban
+      systemd:
+        name: fail2ban
+        state: started
+        enabled: yes
+
+    - name: Add user to docker group
+      user: name={{ newuser_username }} groups=docker append=yes
+
+    - name: Start and enable Docker
+      systemd:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Start and enable Apache
+      systemd:
+        name: apache2
+        state: started
+        enabled: yes
+
+    - name: Start and enable NGINX
+      systemd:
+        name: nginx
+        state: started
+        enabled: yes
+
+    - name: Start and enable MySQL
+      systemd:
+        name: mysql
+        state: started
+        enabled: yes
+
+    - name: Start and enable PHP-FPM services
+      systemd:
+        name: "php{{ item }}-fpm"
+        state: started
+        enabled: yes
+      loop: "{{ php_versions }}"
+
+    - name: Set up sudo permissions
+      lineinfile:
+        dest: /etc/sudoers
+        state: present
+        line: "{{ newuser_username }}	ALL = NOPASSWD: /usr/sbin/service apache2 *"
+        validate: 'visudo -cf %s'
+
+    - name: Set up NGINX sudo permissions
+      lineinfile:
+        dest: /etc/sudoers
+        state: present
+        line: "{{ newuser_username }}	ALL = NOPASSWD: /usr/sbin/service nginx *"
+        validate: 'visudo -cf %s'
+
+    - name: Set up MySQL sudo permissions
+      lineinfile:
+        dest: /etc/sudoers
+        state: present
+        line: "{{ newuser_username }}	ALL = NOPASSWD: /usr/sbin/service mysql *"
+        validate: 'visudo -cf %s'
+
+    - name: Set up Docker sudo permissions
+      lineinfile:
+        dest: /etc/sudoers
+        state: present
+        line: "{{ newuser_username }}	ALL = NOPASSWD: /usr/sbin/service docker *"
+        validate: 'visudo -cf %s'
+
+    - name: Set up PHP-FPM sudo permissions
+      lineinfile:
+        dest: /etc/sudoers
+        state: present
+        line: "{{ newuser_username }}	ALL = NOPASSWD: /etc/init.d/php{{ item }}-fpm *"
+        validate: 'visudo -cf %s'
+      loop: "{{ php_versions }}"
+
+    - name: Install Composer
+      shell: curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+      args:
+        creates: /usr/local/bin/composer
+
+    - name: Install global Composer packages
+      shell: composer global require codeception/codeception phpunit/phpunit friendsofphp/php-cs-fixer phpstan/phpstan
+      args:
+        creates: "{{ ansible_env.HOME }}/.composer/vendor/codeception/codeception"
+
+    - name: Install global npm packages
+      npm:
+        name: "{{ item }}"
+        global: yes
+      with_items:
+        - yarn
+        - pm2
+        - nodemon
+        - typescript
+        - @angular/cli
+        - @vue/cli
+
+    - name: Upgrade Python pip
+      pip:
+        name:
+          - pip
+          - setuptools
+          - wheel
+        state: latest
+
+    - name: Install global Python packages
+      pip:
+        name:
+          - virtualenv
+          - virtualenvwrapper
+        state: present
+
+  post_tasks:
+    - name: Display installation summary
+      debug:
+        msg: |
+          ==========================================
+          Installation completed successfully!
+          
+          User: {{ newuser_username }}
+          PHP versions installed: {{ php_versions | join(', ') }}
+          Web servers: Apache (port 81), NGINX (port 80)
+          Database: MySQL 8.0
+          Java: OpenJDK 17 & 21
+          Python: 3.10, 3.11, 3.12, 3.13
+          Node.js: 18.x
+          Docker: Latest
+          
+          Access URLs:
+          {% for domain in domain_names %}
+          {{ domain }}: http://{{ domain }}
+          {% endfor %}
+          
+          Adminer: http://{{ domain_names[-1] }}/adminer/
+          
+          Next Steps:
+          1. Log out and log back in for group changes to take effect
+          2. Test each PHP version by visiting the URLs above
+          3. Configure your development environment
+          4. Set up your database and applications

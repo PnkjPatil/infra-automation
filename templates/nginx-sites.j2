@@ -1,0 +1,77 @@
+upstream php5 { server 127.0.0.1:81; }
+upstream php7 { server 127.0.0.1:81; }
+upstream php71 { server 127.0.0.1:81; }
+upstream php72 { server 127.0.0.1:81; }
+upstream php73 { server 127.0.0.1:81; }
+upstream php74 { server 127.0.0.1:81; }
+upstream php8 { server 127.0.0.1:81; }
+upstream php81 { server 127.0.0.1:81; }
+upstream php82 { server 127.0.0.1:81; }
+upstream php83 { server 127.0.0.1:81; }
+upstream php84 { server 127.0.0.1:81; }
+
+server {
+    listen 80;
+    server_name {{ newuser_username }}-php5.local;
+    location / { proxy_pass http://php5; }
+}
+
+server {
+    listen 80;
+    server_name {{ newuser_username }}-php7.local;
+    location / { proxy_pass http://php7; }
+}
+
+server {
+    listen 80;
+    server_name {{ newuser_username }}-php71.local;
+    location / { proxy_pass http://php71; }
+}
+
+server {
+    listen 80;
+    server_name {{ newuser_username }}-php72.local;
+    location / { proxy_pass http://php72; }
+}
+
+server {
+    listen 80;
+    server_name {{ newuser_username }}-php73.local;
+    location / { proxy_pass http://php73; }
+}
+
+server {
+    listen 80;
+    server_name {{ newuser_username }}-php74.local;
+    location / { proxy_pass http://php74; }
+}
+
+server {
+    listen 80;
+    server_name {{ newuser_username }}-php8.local;
+    location / { proxy_pass http://php8; }
+}
+
+server {
+    listen 80;
+    server_name {{ newuser_username }}-php81.local;
+    location / { proxy_pass http://php81; }
+}
+
+server {
+    listen 80;
+    server_name {{ newuser_username }}-php82.local;
+    location / { proxy_pass http://php82; }
+}
+
+server {
+    listen 80;
+    server_name {{ newuser_username }}-php83.local;
+    location / { proxy_pass http://php83; }
+}
+
+server {
+    listen 80;
+    server_name {{ newuser_username }}-php84.local;
+    location / { proxy_pass http://php84; }
+}

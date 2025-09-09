@@ -1,0 +1,14 @@
+<VirtualHost *:81>
+    ServerName {{ newuser_username }}-{{ item.0 }}.local
+    DocumentRoot /var/www/{{ newuser_username }}-{{ item.0 }}.local/public
+    
+    <Directory /var/www/{{ newuser_username }}-{{ item.0 }}.local/public>
+        AllowOverride All
+        Require all granted
+    </Directory>
+    
+    ProxyPassMatch ^/(.*\.php(/.*)?)$ unix:/run/php/php{{ item.1 }}-fpm-{{ item.0 }}.sock|fcgi://127.0.0.1:9000/var/www/{{ newuser_username }}-{{ item.0 }}.local/public/$1
+    
+    ErrorLog ${APACHE_LOG_DIR}/{{ item.0 }}_error.log
+    CustomLog ${APACHE_LOG_DIR}/{{ item.0 }}_access.log combined
+</VirtualHost>

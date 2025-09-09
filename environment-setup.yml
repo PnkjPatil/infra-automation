@@ -30,6 +30,19 @@
     tags:
       - aptupdate
 
+  - name: Ensure base build dependencies (Ubuntu 22.04)
+    apt:
+      name:
+        - build-essential
+        - software-properties-common
+        - ca-certificates
+        - curl
+        - gnupg
+        - lsb-release
+      state: present
+    tags:
+      - devtools
+
   - name: Create system User
     user:
       name: "{{newuser_username}}"
@@ -67,6 +80,7 @@
     - { role: geerlingguy.php, php_install_version: "8.1", tags: lamp }
     - { role: geerlingguy.php, php_install_version: "8.2", tags: lamp }
     - { role: geerlingguy.php, php_install_version: "8.3", tags: lamp }
+    - { role: geerlingguy.php, php_install_version: "8.4", tags: lamp }
 
     - { role: geerlingguy.apache-php-fpm, tags: lamp }
     - role: calebwoods.bash_command
@@ -91,7 +105,7 @@
       ignore_errors: yes
       when: "ansible_os_family == 'Debian'"
       java_packages:
-        - openjdk-8-jdk
+        - openjdk-21-jdk
       tags:
       - devtools
       - java
@@ -175,6 +189,21 @@
     apt: name=npm
     tags: devtools
 
+  - name: Install Python 3 and common dependencies
+    apt:
+      name:
+        - python3
+        - python3-pip
+        - python3-venv
+        - python3-dev
+        - pkg-config
+        - libssl-dev
+        - libffi-dev
+      state: present
+    tags:
+      - devtools
+      - python
+
   - name: Install FileZilla
     apt: name=filezilla
     tags: devtools
@@ -234,6 +263,7 @@
     - "8.1"
     - "8.2"
     - "8.3"
+    - "8.4"
 
   - name: chmod hosts file
     file:
@@ -341,6 +371,14 @@
       dest: /etc/sudoers
       state: present
       line: "{{server_runs_as}}	ALL = NOPASSWD: /etc/init.d/php8.3-fpm *"
+      validate: 'visudo -cf %s'
+    tags: devtools
+
+  - name: Allow user to restart FPM (PHP 8.4)
+    lineinfile:
+      dest: /etc/sudoers
+      state: present
+      line: "{{server_runs_as}}	ALL = NOPASSWD: /etc/init.d/php8.4-fpm *"
       validate: 'visudo -cf %s'
     tags: devtools
 

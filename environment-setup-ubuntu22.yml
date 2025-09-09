@@ -1,0 +1,430 @@
+---
+- hosts: localhost
+
+  vars_files: ["vars/default-ubuntu22.yml"]
+
+  become: true
+  gather_facts: true
+
+  pre_tasks:
+  - name: Update apt cache
+    apt: update_cache=yes
+
+  - name: Install required packages for repositories
+    apt: name={{ item }} state=present
+    with_items:
+      - software-properties-common
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - wget
+      - unzip
+      - gnupg
+      - lsb-release
+
+  - name: Add ondrej PHP repositories
+    apt_repository: repo='ppa:ondrej/php' state=present
+
+  - name: Add ondrej Apache repositories
+    apt_repository: repo='ppa:ondrej/apache2' state=present
+
+  - name: Add ondrej Ansible repositories
+    apt_repository: repo='ppa:ansible/ansible' state=present
+
+  - name: Add OpenJDK repository
+    apt_repository: repo='ppa:openjdk-r/ppa' state=present
+
+  - name: Add Python PPA
+    apt_repository: repo='ppa:deadsnakes/ppa' state=present
+
+  - name: Update apt cache after adding repositories
+    apt: update_cache=yes
+
+  - name: Create system User
+    user:
+      name: "{{newuser_username}}"
+      comment: "{{newuser_name}}"
+      generate_ssh_key: yes
+      shell: /bin/bash
+      create_home: yes
+
+  - name: Expire password
+    command: chage -d 0 {{newuser_username}}
+
+  roles:
+    - role: geerlingguy.apache
+      tags: lamp
+
+    # Install all PHP versions including 8.4
+    - { role: geerlingguy.php, php_install_version: "5.6", tags: lamp }
+    - { role: geerlingguy.php, php_install_version: "7.0", tags: lamp }
+    - { role: geerlingguy.php, php_install_version: "7.1", tags: lamp }
+    - { role: geerlingguy.php, php_install_version: "7.2", tags: lamp }
+    - { role: geerlingguy.php, php_install_version: "7.3", tags: lamp }
+    - { role: geerlingguy.php, php_install_version: "7.4", tags: lamp }
+    - { role: geerlingguy.php, php_install_version: "8.0", tags: lamp }
+    - { role: geerlingguy.php, php_install_version: "8.1", tags: lamp }
+    - { role: geerlingguy.php, php_install_version: "8.2", tags: lamp }
+    - { role: geerlingguy.php, php_install_version: "8.3", tags: lamp }
+    - { role: geerlingguy.php, php_install_version: "8.4", tags: lamp }
+
+    - { role: geerlingguy.apache-php-fpm, tags: lamp }
+    
+    - role: calebwoods.bash_command
+      command: 'sudo systemctl stop apache2'
+      tags: lamp
+
+    - { role: geerlingguy.nginx, tags: lamp }
+
+    - role: geerlingguy.mysql
+      ignore_errors: yes
+      tags:
+      - devtools
+      - mysql
+      - lamp
+
+    - role: geerlingguy.composer
+      tags:
+      - devtools
+      - composer
+
+    - role: geerlingguy.java
+      ignore_errors: yes
+      when: "ansible_os_family == 'Debian'"
+      java_packages:
+        - openjdk-17-jdk
+        - openjdk-21-jdk
+      tags:
+      - devtools
+      - java
+
+  tasks:
+  - name: Install Python versions
+    apt: name={{ item }} state=present
+    with_items:
+      - python3
+      - python3-pip
+      - python3-venv
+      - python3.10
+      - python3.11
+      - python3.12
+      - python3.13
+    tags: devtools
+
+  - name: Install Python pip and setuptools
+    pip:
+      name:
+        - pip
+        - setuptools
+        - wheel
+      state: latest
+    tags: devtools
+
+  - name: Install development tools
+    apt: name={{ item }} state=present
+    with_items:
+      - build-essential
+      - git
+      - vim
+      - nano
+      - htop
+      - tree
+      - mc
+      - openssh-server
+      - ufw
+      - fail2ban
+      - logwatch
+      - nginx-extras
+      - apache2-utils
+      - libapache2-mod-php
+      - libapache2-mod-php8.4
+      - libapache2-mod-php8.3
+      - libapache2-mod-php8.2
+      - libapache2-mod-php8.1
+      - libapache2-mod-php8.0
+      - libapache2-mod-php7.4
+      - libapache2-mod-php7.3
+      - libapache2-mod-php7.2
+      - libapache2-mod-php7.1
+      - libapache2-mod-php7.0
+      - libapache2-mod-php5.6
+    tags: devtools
+
+  - name: Install additional PHP extensions for all versions
+    apt: name={{ item }} state=present
+    with_items:
+      - php5.6-common php5.6-cli php5.6-dev php5.6-fpm php5.6-gd php5.6-curl php5.6-imap php5.6-opcache php5.6-xml php5.6-mbstring php5.6-mysql php5.6-zip php5.6-json php5.6-bcmath php5.6-intl php5.6-soap php5.6-xmlrpc php5.6-ldap
+      - php7.0-common php7.0-cli php7.0-dev php7.0-fpm php7.0-gd php7.0-curl php7.0-imap php7.0-opcache php7.0-xml php7.0-mbstring php7.0-mysql php7.0-zip php7.0-json php7.0-bcmath php7.0-intl php7.0-soap php7.0-xmlrpc php7.0-ldap
+      - php7.1-common php7.1-cli php7.1-dev php7.1-fpm php7.1-gd php7.1-curl php7.1-imap php7.1-opcache php7.1-xml php7.1-mbstring php7.1-mysql php7.1-zip php7.1-json php7.1-bcmath php7.1-intl php7.1-soap php7.1-xmlrpc php7.1-ldap
+      - php7.2-common php7.2-cli php7.2-dev php7.2-fpm php7.2-gd php7.2-curl php7.2-imap php7.2-opcache php7.2-xml php7.2-mbstring php7.2-mysql php7.2-zip php7.2-json php7.2-bcmath php7.2-intl php7.2-soap php7.2-xmlrpc php7.2-ldap
+      - php7.3-common php7.3-cli php7.3-dev php7.3-fpm php7.3-gd php7.3-curl php7.3-imap php7.3-opcache php7.3-xml php7.3-mbstring php7.3-mysql php7.3-zip php7.3-json php7.3-bcmath php7.3-intl php7.3-soap php7.3-xmlrpc php7.3-ldap
+      - php7.4-common php7.4-cli php7.4-dev php7.4-fpm php7.4-gd php7.4-curl php7.4-imap php7.4-opcache php7.4-xml php7.4-mbstring php7.4-mysql php7.4-zip php7.4-json php7.4-bcmath php7.4-intl php7.4-soap php7.4-xmlrpc php7.4-ldap
+      - php8.0-common php8.0-cli php8.0-dev php8.0-fpm php8.0-gd php8.0-curl php8.0-imap php8.0-opcache php8.0-xml php8.0-mbstring php8.0-mysql php8.0-zip php8.0-json php8.0-bcmath php8.0-intl php8.0-soap php8.0-xmlrpc php8.0-ldap
+      - php8.1-common php8.1-cli php8.1-dev php8.1-fpm php8.1-gd php8.1-curl php8.1-imap php8.1-opcache php8.1-xml php8.1-mbstring php8.1-mysql php8.1-zip php8.1-json php8.1-bcmath php8.1-intl php8.1-soap php8.1-xmlrpc php8.1-ldap
+      - php8.2-common php8.2-cli php8.2-dev php8.2-fpm php8.2-gd php8.2-curl php8.2-imap php8.2-opcache php8.2-xml php8.2-mbstring php8.2-mysql php8.2-zip php8.2-json php8.2-bcmath php8.2-intl php8.2-soap php8.2-xmlrpc php8.2-ldap
+      - php8.3-common php8.3-cli php8.3-dev php8.3-fpm php8.3-gd php8.3-curl php8.3-imap php8.3-opcache php8.3-xml php8.3-mbstring php8.3-mysql php8.3-zip php8.3-json php8.3-bcmath php8.3-intl php8.3-soap php8.3-xmlrpc php8.3-ldap
+      - php8.4-common php8.4-cli php8.4-dev php8.4-fpm php8.4-gd php8.4-curl php8.4-imap php8.4-opcache php8.4-xml php8.4-mbstring php8.4-mysql php8.4-zip php8.4-json php8.4-bcmath php8.4-intl php8.4-soap php8.4-xmlrpc php8.4-ldap
+    tags: lamp
+
+  - name: Install Node.js and npm
+    apt: name={{ item }} state=present
+    with_items:
+      - nodejs
+      - npm
+    tags: devtools
+
+  - name: Install additional development tools
+    apt: name={{ item }} state=present
+    with_items:
+      - geany
+      - geany-plugins
+      - geany-plugins-common
+      - geany-plugin-addons
+      - geany-plugin-prettyprinter
+      - filezilla
+      - meld
+      - vlc
+      - sublime-text
+      - ubuntu-restricted-extras
+      - libpcre3-dev
+    tags: devtools
+
+  - name: Install Ansible
+    apt: name=ansible state=present
+    tags: devtools
+
+  - name: Install Docker
+    apt: name={{ item }} state=present
+    with_items:
+      - docker.io
+      - docker-compose
+      - containerd
+    tags: devtools
+
+  - name: Add user to docker group
+    user: name={{ newuser_username }} groups=docker append=yes
+    tags: devtools
+
+  - name: Start and enable Docker service
+    systemd:
+      name: docker
+      state: started
+      enabled: yes
+    tags: devtools
+
+  - name: Remove default NGINX vhosts file
+    file:
+      name: "/etc/nginx/sites-enabled/default"
+      state: absent
+    tags: lamp
+
+  - name: Remove default Apache vhosts file
+    file:
+      name: "/etc/apache2/sites-enabled/vhosts.conf"
+      state: absent
+    tags: lamp
+
+  - name: Remove default Apache 000-default file
+    file:
+      name: "/etc/apache2/sites-enabled/000-default.conf"
+      state: absent
+    tags: lamp
+
+  - name: Remove default FPM Pool
+    file:
+      name: "/etc/php/{{item}}/fpm/pool.d/www.conf"
+      state: absent
+    tags: lamp
+    with_items:
+      - "5.6"
+      - "7.0"
+      - "7.1"
+      - "7.2"
+      - "7.3"
+      - "7.4"
+      - "8.0"
+      - "8.1"
+      - "8.2"
+      - "8.3"
+      - "8.4"
+
+  - name: Create NGINX Log format
+    template:
+      src: "templates/nginx-logformat.j2"
+      dest: "/etc/nginx/conf.d/ttpl_nginx_log.conf"
+    tags: lamp
+
+  - name: Create logrotate config
+    template:
+      src: "templates/logrotate.j2"
+      dest: "/etc/logrotate.d/ttpl"
+    tags: lamp
+
+  - name: Install codeception
+    get_url:
+      url: http://codeception.com/codecept.phar
+      dest: /usr/bin/codecept
+      mode: 0755
+      timeout: 1000
+    tags: devtools
+
+  - name: chmod hosts file
+    file:
+      path: "/etc/hosts"
+      mode: "og+w"
+    tags: devtools
+
+  - name: Allow user to restart Apache
+    lineinfile:
+      dest: /etc/sudoers
+      state: present
+      line: "{{newuser_username}}	ALL = NOPASSWD: /usr/sbin/service apache2 *"
+      validate: 'visudo -cf %s'
+    tags: devtools
+
+  - name: Allow user to restart NGINX
+    lineinfile:
+      dest: /etc/sudoers
+      state: present
+      line: "{{newuser_username}}	ALL = NOPASSWD: /usr/sbin/service nginx *"
+      validate: 'visudo -cf %s'
+    tags: devtools
+
+  - name: Allow user to restart FPM (PHP 5.6)
+    lineinfile:
+      dest: /etc/sudoers
+      state: present
+      line: "{{newuser_username}}	ALL = NOPASSWD: /etc/init.d/php5.6-fpm *"
+      validate: 'visudo -cf %s'
+    tags: devtools
+
+  - name: Allow user to restart FPM (PHP 7.0)
+    lineinfile:
+      dest: /etc/sudoers
+      state: present
+      line: "{{newuser_username}}	ALL = NOPASSWD: /etc/init.d/php7.0-fpm *"
+      validate: 'visudo -cf %s'
+    tags: devtools
+
+  - name: Allow user to restart FPM (PHP 7.1)
+    lineinfile:
+      dest: /etc/sudoers
+      state: present
+      line: "{{newuser_username}}	ALL = NOPASSWD: /etc/init.d/php7.1-fpm *"
+      validate: 'visudo -cf %s'
+    tags: devtools
+
+  - name: Allow user to restart FPM (PHP 7.2)
+    lineinfile:
+      dest: /etc/sudoers
+      state: present
+      line: "{{newuser_username}}	ALL = NOPASSWD: /etc/init.d/php7.2-fpm *"
+      validate: 'visudo -cf %s'
+    tags: devtools
+
+  - name: Allow user to restart FPM (PHP 7.3)
+    lineinfile:
+      dest: /etc/sudoers
+      state: present
+      line: "{{newuser_username}}	ALL = NOPASSWD: /etc/init.d/php7.3-fpm *"
+      validate: 'visudo -cf %s'
+    tags: devtools
+
+  - name: Allow user to restart FPM (PHP 7.4)
+    lineinfile:
+      dest: /etc/sudoers
+      state: present
+      line: "{{newuser_username}}	ALL = NOPASSWD: /etc/init.d/php7.4-fpm *"
+      validate: 'visudo -cf %s'
+    tags: devtools
+
+  - name: Allow user to restart FPM (PHP 8.0)
+    lineinfile:
+      dest: /etc/sudoers
+      state: present
+      line: "{{newuser_username}}	ALL = NOPASSWD: /etc/init.d/php8.0-fpm *"
+      validate: 'visudo -cf %s'
+    tags: devtools
+
+  - name: Allow user to restart FPM (PHP 8.1)
+    lineinfile:
+      dest: /etc/sudoers
+      state: present
+      line: "{{newuser_username}}	ALL = NOPASSWD: /etc/init.d/php8.1-fpm *"
+      validate: 'visudo -cf %s'
+    tags: devtools
+
+  - name: Allow user to restart FPM (PHP 8.2)
+    lineinfile:
+      dest: /etc/sudoers
+      state: present
+      line: "{{newuser_username}}	ALL = NOPASSWD: /etc/init.d/php8.2-fpm *"
+      validate: 'visudo -cf %s'
+    tags: devtools
+
+  - name: Allow user to restart FPM (PHP 8.3)
+    lineinfile:
+      dest: /etc/sudoers
+      state: present
+      line: "{{newuser_username}}	ALL = NOPASSWD: /etc/init.d/php8.3-fpm *"
+      validate: 'visudo -cf %s'
+    tags: devtools
+
+  - name: Allow user to restart FPM (PHP 8.4)
+    lineinfile:
+      dest: /etc/sudoers
+      state: present
+      line: "{{newuser_username}}	ALL = NOPASSWD: /etc/init.d/php8.4-fpm *"
+      validate: 'visudo -cf %s'
+    tags: devtools
+
+  - name: Allow user to restart MySQL
+    lineinfile:
+      dest: /etc/sudoers
+      state: present
+      line: "{{newuser_username}}	ALL = NOPASSWD: /usr/sbin/service mysql *"
+      validate: 'visudo -cf %s'
+    tags: devtools
+
+  - name: Allow user to restart Docker
+    lineinfile:
+      dest: /etc/sudoers
+      state: present
+      line: "{{newuser_username}}	ALL = NOPASSWD: /usr/sbin/service docker *"
+      validate: 'visudo -cf %s'
+    tags: devtools
+
+  - name: Configure firewall
+    ufw:
+      rule: allow
+      port: '22'
+      proto: tcp
+    tags: security
+
+  - name: Configure firewall for web services
+    ufw:
+      rule: allow
+      port: '80,443'
+      proto: tcp
+    tags: security
+
+  - name: Enable firewall
+    ufw:
+      state: enabled
+      policy: deny
+    tags: security
+
+  - name: Set up fail2ban
+    systemd:
+      name: fail2ban
+      state: started
+      enabled: yes
+    tags: security
+
+  - name: Final system update
+    apt: upgrade=yes
+    tags: system
+
+  - name: Clean up apt cache
+    apt: autoclean=yes autoremove=yes
+    tags: system

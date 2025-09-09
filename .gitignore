@@ -1,2 +1,82 @@
-inventories/*
-*.retry
+# System files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+logs/
+log/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+
+# Cache
+cache/
+*.cache
+
+# IDE files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# OS generated files
+.fuse_hidden*
+.directory
+.Trash-*
+
+# Package files
+*.deb
+*.rpm
+*.tar.gz
+*.zip
+
+# Backup files
+*.bak
+*.backup
+*.old
+
+# Configuration files with sensitive data
+.env
+.env.local
+.env.production
+config/database.php
+config/config.php
+
+# Database files
+*.sql
+*.sqlite
+*.db
+
+# Node modules (if any)
+node_modules/
+npm-debug.log*
+
+# Composer
+vendor/
+composer.lock
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+env/
+
+# Apache/Nginx
+*.conf.bak
+*.conf.old
+
+# PHP
+*.php.bak
+*.php.old
+
+# Test files
+test-*.sh
+*.test

@@ -1,0 +1,21 @@
+[{{ item.0 }}]
+user = {{ newuser_username }}
+group = {{ newuser_username }}
+listen = /run/php/php{{ item.1 }}-fpm-{{ item.0 }}.sock
+listen.owner = {{ newuser_username }}
+listen.group = {{ newuser_username }}
+listen.mode = 0660
+pm = ondemand
+pm.max_children = 5
+pm.start_servers = 1
+pm.min_spare_servers = 1
+pm.max_spare_servers = 3
+pm.max_requests = 500
+chdir = /
+security.limit_extensions = .php
+php_admin_value[disable_functions] = exec,passthru,shell_exec,system
+php_admin_flag[allow_url_fopen] = off
+php_admin_value[memory_limit] = 256M
+php_admin_value[max_execution_time] = 300
+php_admin_value[upload_max_filesize] = 64M
+php_admin_value[post_max_size] = 64M

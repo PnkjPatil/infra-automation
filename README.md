@@ -1,41 +1,202 @@
-# Automating Common IT Infra Tasks
-Repo that contains scripts to automate various infrastructure activities like developer workstation setup and configuration.
+# PHP Adminer Multi-Version Installation for Ubuntu 22.04
 
-## Setting up User Workstations
-User workstations can be set up with the required development tools by running the following command in a terminal. Needs to be run by a user with sudo access. Script is tested to work on Ubuntu 18.04, 16.04 although it might work with newer versions too.
+A comprehensive solution for installing multiple PHP versions (5.6, 7.0, 7.1, 7.2, 7.3, 7.4, 8.0, 8.1, 8.2, 8.3, 8.4) on Ubuntu 22.04 with Apache, NGINX, MySQL, and Adminer database management tool.
 
-### If you got sudo access, run this command
+## 🚀 Features
+
+- **Multiple PHP Versions**: Install and manage PHP 5.6 through 8.4
+- **Web Stack**: Apache (port 81) + NGINX (port 80) reverse proxy setup
+- **Database**: MySQL 8.0 with Adminer for web-based database management
+- **Development Tools**: Java, Python, Node.js, Docker, and more
+- **Security**: UFW firewall, fail2ban, and secure configurations
+- **Easy Installation**: One-command installation script
+
+## 📋 Prerequisites
+
+- Ubuntu 22.04 (Jammy Jellyfish)
+- User with sudo privileges (not root)
+- Internet connection for package downloads
+- At least 4GB RAM and 20GB disk space
+
+## 🛠️ Quick Installation
+
+### Method 1: One-Command Installation (Recommended)
 
 ```bash
-sudo mkdir -p /tmp/ansible-ttpl-it-automation && sudo wget -q "https://raw.githubusercontent.com/techjoomla/infra-automation/master/ttpl_install.sh" -O /tmp/ansible-ttpl-it-automation/ttpl_install.sh && sudo chmod +x /tmp/ansible-ttpl-it-automation/ttpl_install.sh && sudo /tmp/ansible-ttpl-it-automation/ttpl_install.sh
+# Download and run the installation script
+curl -fsSL https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/install-php-adminer-ubuntu22.sh | bash
 ```
 
-The script will set up all the tools defined in the `environment-setup.yml` file and also set up vhosts, each for each php version
+### Method 2: Manual Installation
 
-## Accessing sites
--   Accessing sites locally
-    -   To access the PHP5 localhost, navigate to https://machineusername-php5.local/ Eg: https://ttpl21-php5.local/
-    -   To access the PHP7 localhost, navigate to http://machineusername-php7.local/ Eg: http://ttpl21-php7.local/
-    -   To access the PHP7.1 localhost, navigate to http://machineusername-php71.local/ Eg: http://ttpl21-php71.local/
-    -   To access the PHP7.2 localhost, navigate to http://machineusername-php72.local/ Eg: http://ttpl21-php72.local/
-    -   To access the PHP7.3 localhost, navigate to http://machineusername-php73.local/ Eg: http://ttpl21-php73.local/
-    -   To access the PHP7.4 localhost, navigate to http://machineusername-php74.local/ Eg: http://ttpl21-php74.local/
-    -   To access the PHP8 localhost, navigate to http://machineusername-php8.local/ Eg: http://ttpl21-php8.local/
-    -   To access the PHP8.1 localhost, navigate to http://machineusername-php81.local/ Eg: http://ttpl21-php81.local/
-    -   To access the PHP8.2 localhost, navigate to http://machineusername-php82.local/ Eg: http://ttpl21-php82.local/
-    -   To access the PHP8.3 localhost, navigate to http://machineusername-php83.local/ Eg: http://ttpl21-php83.local/
--   The files for these are present at /var/www/{machineusername}-{php-version}.local/public
--   Accessing database
-    -   Adminer is installed for all vhosts at /var/www/ttpl21-{php-version}.local/public/adminer
-    -   Can be accessed as http://{machineusername}-{php-version}.local/adminer
-    -   If PHPMyAdmin / Adminer is not installed, so you can download Adminer (http://adminer.org/) and place the file anywhere in your local
+```bash
+# Clone the repository
+git clone https://github.com/YOUR_USERNAME/YOUR_REPO.git
+cd YOUR_REPO
 
-## Installation Troubleshooting
+# Make the script executable
+chmod +x install-php-adminer-ubuntu22.sh
 
-### nginx can not be started
+# Run the installation
+./install-php-adminer-ubuntu22.sh
+```
 
--   Run command `sudo nginx -t`
-    -   If command shows error related to SSL certifcates not found for php5 sites, run below command (replace {machineusername} with your username)
-    -   `sudo openssl req -new -nodes -x509 -subj "/C=IN/ST=Maharashtra/L=Pune/O=Chacha Chaudhary and Co./CN={machineusername}-php5.local" -days 3650 -keyout /etc/nginx/ssl/{machineusername}-php5.local.key -out /etc/nginx/ssl/{machineusername}-php5.local.crt`
-    -   Then run command `sudo service nginx restart`
-    -   Then retry installation
+### Method 3: Ansible Installation
+
+```bash
+# Install Ansible
+sudo apt update && sudo apt install -y ansible
+
+# Clone and run with Ansible
+git clone https://github.com/YOUR_USERNAME/YOUR_REPO.git
+cd YOUR_REPO
+ansible-playbook -i localhost, -c local install-ubuntu22-ansible.yml --become
+```
+
+## 🌐 Access URLs
+
+After installation, you can access each PHP version at:
+
+| PHP Version | URL Pattern | Example |
+|-------------|-------------|---------|
+| PHP 5.6 | `http://username-php5.local` | `http://developer-php5.local` |
+| PHP 7.0 | `http://username-php7.local` | `http://developer-php7.local` |
+| PHP 7.1 | `http://username-php71.local` | `http://developer-php71.local` |
+| PHP 7.2 | `http://username-php72.local` | `http://developer-php72.local` |
+| PHP 7.3 | `http://username-php73.local` | `http://developer-php73.local` |
+| PHP 7.4 | `http://username-php74.local` | `http://developer-php74.local` |
+| PHP 8.0 | `http://username-php8.local` | `http://developer-php8.local` |
+| PHP 8.1 | `http://username-php81.local` | `http://developer-php81.local` |
+| PHP 8.2 | `http://username-php82.local` | `http://developer-php82.local` |
+| PHP 8.3 | `http://username-php83.local` | `http://developer-php83.local` |
+| PHP 8.4 | `http://username-php84.local` | `http://developer-php84.local` |
+
+**Adminer Database Management**: `http://username-php84.local/adminer/`
+
+## 🏗️ Architecture
+
+```
+Internet → NGINX (Port 80) → Apache (Port 81) → PHP-FPM → MySQL
+```
+
+- **NGINX**: Reverse proxy and load balancer
+- **Apache**: PHP processing and content serving
+- **PHP-FPM**: FastCGI Process Manager for each PHP version
+- **MySQL**: Database server
+- **Adminer**: Web-based database management tool
+
+## 📁 Project Structure
+
+```
+infra-automation/
+├── install-php-adminer-ubuntu22.sh    # Main installation script
+├── install-ubuntu22-ansible.yml       # Ansible playbook
+├── environment-setup-ubuntu22.yml      # Environment setup
+├── vars/
+│   └── default-ubuntu22.yml           # Configuration variables
+├── templates/                          # Configuration templates
+│   ├── php-fpm-pool.j2
+│   ├── apache-vhost.j2
+│   └── nginx-sites.j2
+├── test-installation.sh               # Testing script
+└── README.md                          # This file
+```
+
+## 🔧 Configuration
+
+### PHP-FPM Pools
+- Location: `/etc/php/{version}/fpm/pool.d/`
+- Each site has its own pool configuration
+- Optimized for development with reasonable memory limits
+
+### Apache Virtual Hosts
+- Location: `/etc/apache2/sites-available/`
+- Configured for PHP-FPM integration
+- Custom error and access logs
+
+### NGINX Configuration
+- Location: `/etc/nginx/sites-available/`
+- Reverse proxy configuration
+- Upstream definitions for each PHP version
+
+## 🔒 Security Features
+
+- **Firewall**: UFW with minimal open ports (22, 80, 443)
+- **Intrusion Detection**: fail2ban for SSH and web attacks
+- **PHP Security**: Disabled dangerous functions, secure file permissions
+- **User Isolation**: Each site runs under dedicated user account
+- **Sudo Permissions**: Minimal required permissions for service management
+
+## 🚨 Troubleshooting
+
+### Common Issues
+
+1. **NXDOMAIN Error**: Clear browser DNS cache and refresh
+2. **502 Bad Gateway**: Check if Apache and PHP-FPM are running
+3. **Permission Errors**: Verify file ownership and sudo permissions
+4. **Service Failures**: Check if all required packages are installed
+
+### Debug Commands
+
+```bash
+# Check service status
+sudo systemctl status apache2 nginx mysql php8.1-fpm
+
+# Check Apache configuration
+sudo apache2ctl configtest
+
+# Check NGINX configuration
+sudo nginx -t
+
+# Check hosts file
+cat /etc/hosts | grep username
+
+# Check logs
+sudo tail -f /var/log/nginx/error.log
+sudo tail -f /var/log/apache2/error.log
+```
+
+## 📚 Documentation
+
+- [PHP Documentation](https://www.php.net/docs.php)
+- [Apache Documentation](https://httpd.apache.org/docs/)
+- [NGINX Documentation](https://nginx.org/en/docs/)
+- [MySQL Documentation](https://dev.mysql.com/doc/)
+- [Adminer Documentation](https://www.adminer.org/)
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+### Development Setup
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature-name`
+3. Make your changes
+4. Commit your changes: `git commit -am 'Add feature'`
+5. Push to the branch: `git push origin feature-name`
+6. Submit a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## ⚠️ Important Notes
+
+- This installation script is designed for development and testing environments
+- For production use, please review and customize security settings
+- The script requires sudo privileges but should not be run as root
+- All PHP versions are configured to use PHP 8.1 FPM on Ubuntu 22.04
+
+## 🆘 Support
+
+If you encounter any issues:
+
+1. Check the troubleshooting section above
+2. Review the logs for error messages
+3. Open an issue on GitHub with detailed information
+4. Include your Ubuntu version and any error messages
+
+---
+
+**Made with ❤️ for the PHP development community**

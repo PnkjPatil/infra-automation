@@ -1,0 +1,69 @@
+ server {
+  listen 80;
+  listen [::]:80;
+  server_name
+{% for item in site_server_name %}
+    {{ item }}
+{% endfor %}
+  ;
+
+{% if vhost_ssl is defined %}
+  return 301 https://$host$request_uri;
+}
+{% else %}
+  access_log  /var/log/nginx/{{ site_id }}/nginx.access.log  ttpl_nginx;
+  error_log  /var/log/nginx/{{ site_id }}/nginx.error.log;
+
+  proxy_set_header    Host              $host;
+  proxy_set_header    X-Real-IP         $remote_addr;
+  proxy_set_header    X-Forwarded-For   $proxy_add_x_forwarded_for;
+  proxy_set_header    X-Forwarded-Proto $scheme;
+
+  {% if resolver_ip is defined %}
+    resolver {{ resolver_ip }} valid=100s;
+  {% endif %}
+
+  include /etc/nginx/sites-enabled/{{site_id}}.d/*.conf;
+}
+{% endif %}
+
+{% if vhost_ssl is defined %}
+server {
+  listen       443 ssl spdy;
+  listen       [::]:443 ssl spdy;
+  server_name
+{% for item in site_server_name %}
+    {{ item }}
+{% endfor %}
+  ;
+
+  ssl_certificate_key      ssl/{{site_server_name[0]}}.key;
+  ssl_certificate          ssl/{{site_server_name[0]}}.crt;
+
+  access_log  /var/log/nginx/{{ site_id }}/nginx.access.log  ttpl_nginx;
+  error_log  /var/log/nginx/{{ site_id }}/nginx.error.log;
+
+  proxy_set_header    Host              $host;
+  proxy_set_header    X-Real-IP         $remote_addr;
+  proxy_set_header    X-Forwarded-For   $proxy_add_x_forwarded_for;
+  proxy_set_header    X-Forwarded-SSL   on;
+  proxy_set_header    X-Forwarded-Proto $scheme;
+  {% if resolver_ip is defined %}
+  resolver {{ resolver_ip }} valid=100s;
+  {% endif %}
+
+  include /etc/nginx/sites-enabled/{{site_id}}.d/*.conf;
+}
+{% endif %}
+
+{% for item in upstreams %}
+upstream {{ item.name }} {
+  {% for config_line in item.config_lines %}
+  {{ config_line }};
+  {% endfor %}
+
+  {% for node in item.ip %}
+	server "{{ node }}";
+	{% endfor %}
+}
+{% endfor %}
